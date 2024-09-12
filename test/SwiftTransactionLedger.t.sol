@@ -1,69 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
-contract SwiftTransactionLedger {
-    address internal owner;
+import {Test, console} from "forge-std/Test.sol";
+import {SwiftTransactionLedger} from "../src/SwiftTransactionLedger.sol";
 
-    struct Transaction {
-        string transactionReference;
-        string dateCurrencyAmount;
-        string orderingCustomer;
-        string beneficiary;
-    }
+contract SwiftTransactionLedgerTest is Test {
+    SwiftTransactionLedger public swiftTransactionLedger;
 
-    struct FinFile {
-        string name;
-        string cid;
-    }
-
-    Transaction[] public transactions;
-    FinFile public finFile;
-
-    error NOT_AUTHORIZED();
-
-    modifier onlyOwner(){
-        if (msg.sender != owner) {
-            revert NOT_AUTHORIZED();
-        }
-        _;
-    }
-
-    constructor() {
-        owner = msg.sender;
-    }
-
-    function addTransaction(
-        string memory _transactionReference,
-        string memory _dateCurrencyAmount,
-        string memory _orderingCustomer,
-        string memory _beneficiary
-    ) public onlyOwner {
-        transactions.push(Transaction(
-            _transactionReference,
-            _dateCurrencyAmount,
-            _orderingCustomer,
-            _beneficiary
-        ));
+    function setUp() public {
+        swiftTransactionLedger = new SwiftTransactionLedger();
     }
 
 
-    function getTransaction(uint _index) public view onlyOwner returns (Transaction) {
-        return transactions[_index];
-    }
+    function testRecordAndGetFinFile() public {
+        swiftTransactionLedger.recordFinFile("FIN2024", "cid_12345");
 
-    // Return the entire list of transactions
-    function getAllTransactions() public view onlyOwner returns (Transaction[] memory) {
-        return transactions;
-    }
+        string memory finFileCid = swiftTransactionLedger.getFinFile();
 
-
-    function recordFinFile(string memory _name, string memory _cid) public onlyOwner {
-        finFile.cid = _cid;
-        finFile.name = _name;
-    }
-
-    function getFinFile() public onlyOwner returns (string)  {
-        return finFile.cid;
+        assertEq(finFileCid, "cid_12345");
     }
 
 
